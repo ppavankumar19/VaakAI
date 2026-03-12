@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.venv/
+*.egg-info/
+
+# Environment
+.env
+
+# Runtime data
+backend/uploads/
+backend/chroma_data/
+
+# OS
+.DS_Store
+Thumbs.db
