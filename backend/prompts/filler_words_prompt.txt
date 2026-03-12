@@ -1,0 +1,7 @@
+Analyze the following transcript for disfluency and filler words.
+Count occurrences of: um, uh, like, basically, you know, so, right, okay, actually, literally, kind of, sort of.
+Return ONLY a JSON object with each filler word as a key and its count as the value.
+Only include words that appear at least once. No explanation, no markdown, just raw JSON.
+
+Transcript:
+{transcript}
