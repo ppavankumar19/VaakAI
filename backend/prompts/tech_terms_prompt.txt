@@ -1,0 +1,8 @@
+From the following transcript, extract all technical, domain-specific, or project-related terms.
+Return ONLY a JSON array of strings. No explanation, no markdown, just the raw JSON array.
+Only include genuine technical vocabulary — ignore common words.
+
+Transcript:
+{transcript}
+
+Return format: ["term1", "term2", ...]
