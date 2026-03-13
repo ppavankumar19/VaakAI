@@ -99,38 +99,46 @@ VaakAI/
 - [Sarvam.ai](https://dashboard.sarvam.ai) API key (free tier)
 - [Groq](https://console.groq.com) API key (free tier)
 
-### Backend Setup
+### 1. Create the PostgreSQL Database
+
+```bash
+psql -U postgres -h localhost -c "CREATE DATABASE voiceiq;"
+```
+
+> On Windows, if `psql` is not on PATH, use the full path:
+> `& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -c "CREATE DATABASE voiceiq;"`
+
+### 2. Backend Setup
 
 ```bash
 cd backend
 python -m venv venv
-source venv/bin/activate        # Windows: venv\Scripts\activate
+venv\Scripts\activate           # Windows
+# source venv/bin/activate      # macOS/Linux
 pip install -r requirements.txt
-
-cp ../.env.example .env
-# Edit .env — fill in SARVAM_API_KEY, GROQ_API_KEY, DATABASE_URL
-
-# Create the database
-createdb voiceiq
-
-uvicorn main:app --reload --port 8000
 ```
 
-### Frontend
-
-No build step. Open `frontend/index.html` directly in Chrome, or it is served automatically at `http://localhost:8000/` once the backend is running.
-
-### Environment Variables
+Copy `.env.example` to `backend/.env` and fill in your credentials:
 
 ```env
 SARVAM_API_KEY=your_sarvam_key_here
 GROQ_API_KEY=your_groq_key_here
 GROQ_MODEL=llama-3.1-70b-versatile
-DATABASE_URL=postgresql://postgres:postgres@localhost/voiceiq
-CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:5500
+DATABASE_URL=postgresql://postgres:your_password@localhost/voiceiq
+CORS_ORIGINS=http://localhost:8523,http://127.0.0.1:8523
 UPLOAD_DIR=./uploads
 CHROMA_PERSIST_DIR=./chroma_data
 ```
+
+Start the server:
+
+```bash
+uvicorn main:app --reload --port 8523
+```
+
+### 3. Frontend
+
+No build step. The frontend is automatically served at `http://localhost:8523/` once the backend is running.
 
 ---
 
