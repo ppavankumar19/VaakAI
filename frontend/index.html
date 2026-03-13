@@ -20,19 +20,36 @@
 <!-- ═══════════════════════════════════════════════════════ UPLOAD SCREEN -->
 <div id="screen-upload" class="screen">
   <div class="upload-wrapper">
-    <div id="drop-zone" tabindex="0" role="button" aria-label="Upload video file">
-      <div class="drop-icon">🎬</div>
-      <h2>Upload Your Video</h2>
-      <p>Drag &amp; drop here, or <span class="link-text">click to browse</span></p>
-      <p class="hint">MP4 · MOV · WEBM · AVI · MKV &nbsp;·&nbsp; Max 500 MB</p>
-      <input id="file-input" type="file" accept=".mp4,.mov,.webm,.avi,.mkv" hidden />
+
+    <div class="upload-tabs">
+      <button id="tab-file" class="upload-tab active">Upload File</button>
+      <button id="tab-url" class="upload-tab">YouTube URL</button>
     </div>
 
-    <div id="file-preview" class="hidden">
-      <span class="file-icon">🎥</span>
-      <span id="file-name-label"></span>
-      <span id="file-size-label" class="muted"></span>
-      <button id="clear-file" aria-label="Remove file">✕</button>
+    <div id="section-file">
+      <div id="drop-zone" tabindex="0" role="button" aria-label="Upload video file">
+        <div class="drop-icon">🎬</div>
+        <h2>Upload Your Video</h2>
+        <p>Drag &amp; drop here, or <span class="link-text">click to browse</span></p>
+        <p class="hint">MP4 · MOV · WEBM · AVI · MKV &nbsp;·&nbsp; Max 500 MB</p>
+        <input id="file-input" type="file" accept=".mp4,.mov,.webm,.avi,.mkv" hidden />
+      </div>
+
+      <div id="file-preview" class="hidden">
+        <span class="file-icon">🎥</span>
+        <span id="file-name-label"></span>
+        <span id="file-size-label" class="muted"></span>
+        <button id="clear-file" aria-label="Remove file">✕</button>
+      </div>
+    </div>
+
+    <div id="section-url" class="hidden">
+      <div id="url-zone">
+        <div class="drop-icon">🔗</div>
+        <h2>Paste YouTube URL</h2>
+        <input id="url-input" type="url" placeholder="https://youtube.com/watch?v=…" spellcheck="false" autocomplete="off" />
+        <p class="hint">Public YouTube videos only · Max 60 minutes · 500 MB</p>
+      </div>
     </div>
 
     <div class="upload-options">
@@ -82,8 +99,8 @@
   <!-- Top: video player + transcript -->
   <div class="results-top">
 
-    <!-- Left: video player -->
-    <div class="video-panel">
+    <!-- Left: video player (file upload) -->
+    <div class="video-panel" id="video-panel">
       <video id="video-player" controls></video>
       <div class="speed-row">
         <label for="speed-select">Speed</label>
@@ -95,6 +112,18 @@
           <option value="1.5">1.5×</option>
           <option value="2">2×</option>
         </select>
+      </div>
+    </div>
+
+    <!-- Left: YouTube embed (URL upload) -->
+    <div class="video-panel hidden" id="youtube-panel">
+      <div class="youtube-embed-wrap">
+        <iframe id="youtube-iframe" src="" allowfullscreen frameborder="0"
+          allow="autoplay; encrypted-media"></iframe>
+      </div>
+      <div class="speed-row">
+        <a id="youtube-link" href="#" target="_blank" rel="noopener noreferrer"
+          style="color:var(--primary);font-size:0.85rem">Open on YouTube ↗</a>
       </div>
     </div>
 

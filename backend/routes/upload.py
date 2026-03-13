@@ -3,11 +3,13 @@ import uuid
 from uuid import UUID as PyUUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
 
 from database import get_db
 from models.schemas import Session as SessionModel
-from pipeline import process_video
+from pipeline import process_video, process_url
+from services.url_downloader import validate_youtube_url, URLDownloadError
 
 router = APIRouter()
 
@@ -74,6 +76,43 @@ async def upload_video(
     }
 
 
+class URLUploadBody(BaseModel):
+    url: str
+    language: str = "en-IN"
+
+
+@router.post("/upload-url", status_code=202)
+async def upload_video_url(
+    background_tasks: BackgroundTasks,
+    body: URLUploadBody,
+    db: DBSession = Depends(get_db),
+):
+    try:
+        validate_youtube_url(body.url)
+    except URLDownloadError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    session_id = str(uuid.uuid4())
+    session = SessionModel(
+        id=session_id,
+        file_name=body.url,
+        language_code=body.language,
+        status="processing",
+        stage="downloading",
+        progress_percent=3,
+    )
+    db.add(session)
+    db.commit()
+
+    background_tasks.add_task(process_url, session_id, body.url, body.language)
+
+    return {
+        "session_id": session_id,
+        "status": "processing",
+        "estimated_duration_seconds": 120,
+    }
+
+
 @router.get("/session/{session_id}")
 def get_session(session_id: str, db: DBSession = Depends(get_db)):
     try:
@@ -106,4 +145,5 @@ def get_session(session_id: str, db: DBSession = Depends(get_db)):
         "status": "complete",
         "transcript": data.get("transcript", []),
         "analysis": data.get("analysis", {}),
+        "source_url": data.get("source_url"),
     }

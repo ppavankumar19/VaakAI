@@ -85,7 +85,7 @@ def _save_chunks(db, session_id, chunks: list):
     db.commit()
 
 
-def process_video(session_id: str, video_path: str, language: str):
+def process_video(session_id: str, video_path: str, language: str, source_url: str = None):
     """
     Full processing pipeline. Called as a FastAPI background task (runs in thread pool).
 
@@ -122,7 +122,10 @@ def process_video(session_id: str, video_path: str, language: str):
         # ── 5. Persist final results ─────────────────────────────────────────
         session = db.query(Session).filter(Session.id == session_id).first()
         session.transcript_text = transcript_text
-        session.analysis_json = {"transcript": segments, "analysis": analysis}
+        result: dict = {"transcript": segments, "analysis": analysis}
+        if source_url:
+            result["source_url"] = source_url
+        session.analysis_json = result
         session.status = "complete"
         session.stage = "complete"
         session.progress_percent = 100
@@ -148,3 +151,52 @@ def process_video(session_id: str, video_path: str, language: str):
                     os.remove(path)
                 except OSError:
                     pass
+
+
+def process_url(session_id: str, url: str, language: str):
+    """Background task: download YouTube video then run the standard pipeline."""
+    from services.url_downloader import download_youtube_video, URLDownloadError
+
+    upload_dir = os.getenv("UPLOAD_DIR", "./uploads")
+    db = SessionLocal()
+    try:
+        _update(db, session_id, status="processing", stage="downloading", progress=3)
+        video_path, title = download_youtube_video(url, session_id, upload_dir)
+
+        session = db.query(Session).filter(Session.id == session_id).first()
+        if session:
+            session.file_name = title
+            session.file_size_bytes = os.path.getsize(video_path)
+            db.commit()
+
+    except URLDownloadError as e:
+        try:
+            session = db.query(Session).filter(Session.id == session_id).first()
+            if session:
+                session.status = "failed"
+                session.stage = "failed"
+                session.error_message = str(e)
+                db.commit()
+        except Exception:
+            pass
+        db.close()
+        return
+
+    except Exception as exc:
+        logger.error("URL download failed for %s: %s", session_id, exc, exc_info=True)
+        try:
+            session = db.query(Session).filter(Session.id == session_id).first()
+            if session:
+                session.status = "failed"
+                session.stage = "failed"
+                session.error_message = str(exc)
+                db.commit()
+        except Exception:
+            pass
+        db.close()
+        return
+
+    else:
+        db.close()
+
+    process_video(session_id, video_path, language, source_url=url)

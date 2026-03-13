@@ -8,6 +8,8 @@ const POLL_INTERVAL_MS = 3000;
 const state = {
   sessionId: null,
   videoFile: null,
+  sourceUrl: null,
+  uploadMode: 'file',   // 'file' | 'url'
   transcript: [],
   analysis: null,
   pollTimer: null,
@@ -43,6 +45,45 @@ function formatBytes(bytes) {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+// ─── TAB SWITCHING ────────────────────────────────────────────────────────────
+function setupTabs() {
+  $('tab-file').addEventListener('click', () => setUploadMode('file'));
+  $('tab-url').addEventListener('click', () => setUploadMode('url'));
+
+  $('url-input').addEventListener('input', e => {
+    if (state.uploadMode !== 'url') return;
+    const valid = isValidYouTubeUrl(e.target.value.trim());
+    $('upload-btn').disabled = !valid;
+    if (valid) hide('upload-error');
+  });
+}
+
+function setUploadMode(mode) {
+  state.uploadMode = mode;
+  $('tab-file').classList.toggle('active', mode === 'file');
+  $('tab-url').classList.toggle('active', mode === 'url');
+
+  if (mode === 'file') {
+    show('section-file');
+    hide('section-url');
+    $('upload-btn').disabled = !state.videoFile;
+  } else {
+    hide('section-file');
+    show('section-url');
+    $('upload-btn').disabled = !isValidYouTubeUrl($('url-input').value.trim());
+  }
+  hide('upload-error');
+}
+
+function isValidYouTubeUrl(url) {
+  try {
+    const u = new URL(url);
+    return ['youtube.com', 'www.youtube.com', 'youtu.be', 'm.youtube.com'].includes(u.hostname);
+  } catch {
+    return false;
+  }
+}
+
 // ─── DROP ZONE SETUP ─────────────────────────────────────────────────────────
 function setupDropZone() {
   const zone = $('drop-zone');
@@ -65,7 +106,10 @@ function setupDropZone() {
   });
 
   $('clear-file').addEventListener('click', clearFile);
-  $('upload-btn').addEventListener('click', startUpload);
+  $('upload-btn').addEventListener('click', () => {
+    if (state.uploadMode === 'url') startUrlUpload();
+    else startUpload();
+  });
 }
 
 function handleFileSelect(file) {
@@ -150,8 +194,44 @@ function startUpload() {
   xhr.send(formData);
 }
 
+function startUrlUpload() {
+  const url = $('url-input').value.trim();
+  if (!isValidYouTubeUrl(url)) return;
+
+  const language = $('language-select').value;
+  hide('upload-error');
+  $('upload-btn').disabled = true;
+  show('upload-progress');
+  $('upload-bar').style.width = '100%';
+  $('upload-pct').textContent = 'Submitting…';
+
+  fetch(`${API_BASE}/api/upload-url`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url, language }),
+  })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+      if (ok) {
+        state.sessionId = data.session_id;
+        showScreen('processing');
+        pollSession();
+      } else {
+        hide('upload-progress');
+        $('upload-btn').disabled = false;
+        showUploadError(data.detail || 'Failed to submit URL.');
+      }
+    })
+    .catch(() => {
+      hide('upload-progress');
+      $('upload-btn').disabled = false;
+      showUploadError('Network error. Is the backend running at ' + API_BASE + '?');
+    });
+}
+
 // ─── POLLING ──────────────────────────────────────────────────────────────────
 const STAGE_LABELS = {
+  downloading:      'Downloading from YouTube…',
   uploading:        'Saving your video…',
   extracting_audio: 'Extracting audio with FFmpeg…',
   transcribing:     'Transcribing speech via Sarvam.ai (this takes a minute)…',
@@ -196,9 +276,20 @@ function showProcessingError(msg) {
 }
 
 // ─── RESULTS ──────────────────────────────────────────────────────────────────
+function extractYouTubeId(url) {
+  try {
+    const u = new URL(url);
+    if (u.hostname === 'youtu.be') return u.pathname.slice(1).split('?')[0];
+    return u.searchParams.get('v');
+  } catch {
+    return null;
+  }
+}
+
 function renderResults(data) {
   state.transcript = data.transcript || [];
   state.analysis = data.analysis || {};
+  state.sourceUrl = data.source_url || null;
 
   const a = state.analysis;
 
@@ -210,10 +301,22 @@ function renderResults(data) {
     (a.technical_terms || []).map(t => t.toLowerCase())
   );
 
-  // Load video before rendering so URL is ready
+  // Set up video panel
   const video = $('video-player');
-  URL.revokeObjectURL(video.src); // free previous blob URL if any
-  video.src = URL.createObjectURL(state.videoFile);
+  if (state.videoFile) {
+    URL.revokeObjectURL(video.src);
+    video.src = URL.createObjectURL(state.videoFile);
+    $('video-panel').classList.remove('hidden');
+    $('youtube-panel').classList.add('hidden');
+  } else if (state.sourceUrl) {
+    $('video-panel').classList.add('hidden');
+    $('youtube-panel').classList.remove('hidden');
+    $('youtube-link').href = state.sourceUrl;
+    const ytId = extractYouTubeId(state.sourceUrl);
+    if (ytId) {
+      $('youtube-iframe').src = `https://www.youtube.com/embed/${ytId}?rel=0`;
+    }
+  }
 
   renderTranscript();
   renderMetricCards(a);
@@ -309,6 +412,14 @@ function setupVideoSync() {
 }
 
 function seekVideo(startMs) {
+  if (state.sourceUrl) {
+    const ytId = extractYouTubeId(state.sourceUrl);
+    if (ytId) {
+      const sec = Math.floor(startMs / 1000);
+      $('youtube-iframe').src = `https://www.youtube.com/embed/${ytId}?start=${sec}&autoplay=1&rel=0`;
+    }
+    return;
+  }
   const video = $('video-player');
   video.currentTime = startMs / 1000;
   video.play();
@@ -591,6 +702,7 @@ function resetState() {
   clearTimeout(state.pollTimer);
   state.sessionId = null;
   state.videoFile = null;
+  state.sourceUrl = null;
   state.transcript = [];
   state.analysis = null;
   state.pollTimer = null;
@@ -600,6 +712,7 @@ function resetState() {
   destroyCharts();
 
   $('file-input').value = '';
+  $('url-input').value = '';
   hide('file-preview');
   hide('upload-progress');
   hide('upload-error');
@@ -611,12 +724,19 @@ function resetState() {
   video.pause();
   URL.revokeObjectURL(video.src);
   video.src = '';
+
+  $('youtube-iframe').src = '';
+  $('youtube-panel').classList.add('hidden');
+  $('video-panel').classList.remove('hidden');
+
+  setUploadMode('file');
 }
 
 // ─── BOOT ────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
   showScreen('upload'); // set initial visible screen
 
+  setupTabs();
   setupDropZone();
   setupTranscriptSearch();
   setupVideoSync(); // register once; reads state.transcript at event time

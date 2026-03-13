@@ -17,6 +17,7 @@ Upload a video → audio is extracted via FFmpeg → transcribed by Sarvam.ai �
 ### Video Upload & Processing
 - Accepts `.mp4`, `.webm`, `.mov`, `.avi`, `.mkv`
 - Drag-and-drop or click-to-browse upload
+- **Paste a YouTube URL** — public videos downloaded automatically (max 60 min / 500 MB)
 - Extracts audio track via FFmpeg server-side
 
 ### Speech Transcription (Sarvam.ai)
@@ -57,6 +58,7 @@ Upload a video → audio is extracted via FFmpeg → transcribed by Sarvam.ai �
 | LLM | Groq API — `llama-3.1-70b-versatile` (free tier) |
 | Vector DB | ChromaDB (local persistent) |
 | Audio | FFmpeg |
+| YouTube Download | yt-dlp |
 | Database | PostgreSQL |
 
 ---
@@ -72,12 +74,13 @@ VaakAI/
 │   ├── models/
 │   │   └── schemas.py             # ORM models: Session, TranscriptChunk
 │   ├── routes/
-│   │   ├── upload.py              # POST /api/upload, GET /api/session/{id}
+│   │   ├── upload.py              # POST /api/upload, POST /api/upload-url, GET /api/session/{id}
 │   │   └── analyze.py             # POST /api/analyze/ask (RAG Q&A)
 │   ├── services/
 │   │   ├── audio_extractor.py     # FFmpeg wrapper
 │   │   ├── sarvam_client.py       # Sarvam.ai STT client
 │   │   ├── llm_chain.py           # Groq LLM analysis + local metrics
+│   │   ├── url_downloader.py      # YouTube URL validator + yt-dlp downloader
 │   │   └── vector_store.py        # ChromaDB embed + search
 │   ├── prompts/                   # Prompt templates (.txt)
 │   └── requirements.txt
@@ -145,10 +148,12 @@ No build step. The frontend is automatically served at `http://localhost:8523/` 
 ## How It Works
 
 ```
-[User Uploads Video]
-        ↓
-[POST /api/upload → session UUID created]
-        ↓
+[User Uploads File]               [User Pastes YouTube URL]
+        ↓                                  ↓
+[POST /api/upload]           [POST /api/upload-url → yt-dlp downloads video]
+        ↓                                  ↓
+        └──────────────┬───────────────────┘
+                       ↓
 [FFmpeg extracts 16kHz mono WAV]
         ↓
 [Sarvam.ai saarika:v2 → timestamped transcript]
@@ -178,6 +183,7 @@ No build step. The frontend is automatically served at `http://localhost:8523/` 
 ## Roadmap
 
 - [x] v1.0 — Upload + Transcription + AI Analysis + Dashboard
+- [x] v1.0.1 — YouTube URL input (paste URL → auto-download + analyze)
 - [ ] v1.1 — Grammar score + Sentiment analysis + Topic segmentation
 - [ ] v1.2 — RAG Q&A panel (ask questions about the video)
 - [ ] v1.3 — Multi-speaker detection
@@ -199,4 +205,5 @@ MIT License — Free for personal and educational use.
 - [Sarvam.ai](https://sarvam.ai) — Indian language speech-to-text
 - [Groq](https://groq.com) — Fast LLM inference (Llama 3.1)
 - [FFmpeg](https://ffmpeg.org) — Audio extraction
+- [yt-dlp](https://github.com/yt-dlp/yt-dlp) — YouTube video download
 - [ChromaDB](https://trychroma.com) — Vector store

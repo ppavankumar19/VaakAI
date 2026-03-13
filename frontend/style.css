@@ -122,6 +122,76 @@ header {
 }
 #clear-file:hover { color: var(--error); }
 
+/* ─── UPLOAD TABS ────────────────────────────────────────────────────────── */
+.upload-tabs {
+  display: flex;
+  gap: 4px;
+  background: var(--surface-2);
+  border-radius: 8px;
+  padding: 4px;
+}
+.upload-tab {
+  flex: 1;
+  padding: 8px 16px;
+  background: transparent;
+  color: var(--muted);
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.15s, color 0.15s;
+}
+.upload-tab.active {
+  background: var(--primary);
+  color: #fff;
+}
+.upload-tab:not(.active):hover {
+  background: rgba(108,99,255,0.12);
+  color: var(--text);
+}
+
+/* ─── URL INPUT ──────────────────────────────────────────────────────────── */
+#url-zone {
+  background: var(--surface);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 40px 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  transition: border-color 0.2s;
+}
+#url-zone h2 { font-size: 1.2rem; }
+#url-input {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: var(--text);
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color 0.2s;
+  text-align: center;
+}
+#url-input:focus { border-color: var(--primary); }
+#url-input::placeholder { color: var(--muted); }
+
+/* ─── YOUTUBE EMBED ──────────────────────────────────────────────────────── */
+.youtube-embed-wrap {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 */
+}
+#youtube-iframe {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  border-radius: var(--radius);
+}
+
 .upload-options {
   display: flex;
   align-items: center;
