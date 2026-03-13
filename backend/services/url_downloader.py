@@ -3,6 +3,10 @@ from urllib.parse import urlparse
 
 import yt_dlp
 
+# yt-dlp renamed MatchFilterReject → RejectedVideoReached in 2025+
+_MatchFilterReject = getattr(yt_dlp.utils, 'RejectedVideoReached',
+                             getattr(yt_dlp.utils, 'MatchFilterReject', Exception))
+
 YOUTUBE_DOMAINS = {"youtube.com", "www.youtube.com", "youtu.be", "m.youtube.com"}
 MAX_DURATION_SECONDS = 3600   # 60 minutes
 MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB
@@ -47,7 +51,7 @@ def download_youtube_video(url: str, session_id: str, download_dir: str) -> tupl
     output_template = os.path.join(download_dir, f"{session_id}.%(ext)s")
 
     ydl_opts = {
-        "format": "bestvideo[ext=mp4][height<=720]+bestaudio[ext=m4a]/best[ext=mp4]/best",
+        "format": "best[ext=mp4][height<=720]/best[ext=mp4]/best",
         "outtmpl": output_template,
         "max_filesize": MAX_FILE_BYTES,
         "match_filter": _check_duration,
@@ -58,7 +62,7 @@ def download_youtube_video(url: str, session_id: str, download_dir: str) -> tupl
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         try:
             info = ydl.extract_info(url, download=True)
-        except yt_dlp.utils.MatchFilterReject as e:
+        except _MatchFilterReject as e:
             raise URLDownloadError(str(e))
         except yt_dlp.utils.DownloadError as e:
             raise URLDownloadError(str(e))

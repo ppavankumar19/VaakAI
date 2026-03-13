@@ -113,13 +113,7 @@ def process_video(session_id: str, video_path: str, language: str, source_url: s
         _update(db, session_id, stage="analyzing", progress=60)
         analysis = run_analysis(transcript_text, segments)
 
-        # ── 4. Embed chunks for RAG Q&A ──────────────────────────────────────
-        _update(db, session_id, stage="embedding", progress=85)
-        chunks = _make_text_chunks(transcript_text, segments)
-        _save_chunks(db, session_id, chunks)
-        embed_chunks(session_id, chunks)
-
-        # ── 5. Persist final results ─────────────────────────────────────────
+        # ── 4. Persist final results — mark complete so frontend unblocks ────
         session = db.query(Session).filter(Session.id == session_id).first()
         session.transcript_text = transcript_text
         result: dict = {"transcript": segments, "analysis": analysis}
@@ -130,6 +124,15 @@ def process_video(session_id: str, video_path: str, language: str, source_url: s
         session.stage = "complete"
         session.progress_percent = 100
         db.commit()
+
+        # ── 5. Embed chunks for RAG Q&A (background, non-blocking) ───────────
+        # Runs after complete — failure here does not affect the results shown.
+        try:
+            chunks = _make_text_chunks(transcript_text, segments)
+            _save_chunks(db, session_id, chunks)
+            embed_chunks(session_id, chunks)
+        except Exception as emb_exc:
+            logger.warning("Embedding failed for session %s (RAG unavailable): %s", session_id, emb_exc)
 
     except Exception as exc:
         logger.error("Pipeline failed for session %s: %s", session_id, exc, exc_info=True)

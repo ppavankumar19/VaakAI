@@ -9,7 +9,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 Built stack (MVP complete):
 - **Backend:** Python + FastAPI, SQLAlchemy, ChromaDB, PostgreSQL
 - **Frontend:** HTML5 + CSS3 + Vanilla JS, Chart.js (no build step)
-- **APIs:** Sarvam.ai `saarika:v2` (STT, free tier), Groq `llama-3.1-70b-versatile` (LLM, free tier)
+- **APIs:** Sarvam.ai `saarika:v2.5` (STT, free tier), Groq `llama-3.3-70b-versatile` (LLM, free tier)
 - **Infrastructure:** FFmpeg (audio extraction), local filesystem (file storage in MVP)
 
 ## Development Setup
@@ -26,7 +26,7 @@ python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 cp ../.env.example .env   # fill in API keys
-uvicorn main:app --reload --port 8000
+uvicorn main:app --reload --port 8523
 ```
 
 ### Frontend
@@ -36,7 +36,7 @@ No build step — open `frontend/index.html` directly in Chrome, or it is auto-s
 ```
 SARVAM_API_KEY=        # sarvam.ai free tier
 GROQ_API_KEY=          # groq.com free tier
-GROQ_MODEL=llama-3.1-70b-versatile   # or llama3-70b-8192, mixtral-8x7b-32768
+GROQ_MODEL=llama-3.3-70b-versatile   # or llama-3.1-70b-versatile, llama3-70b-8192
 DATABASE_URL=postgresql://user:pass@localhost/voiceiq
 ```
 
@@ -47,8 +47,9 @@ DATABASE_URL=postgresql://user:pass@localhost/voiceiq
 2. `sarvam_client.py` — sends WAV to Sarvam.ai (`model: saarika:v2`, `with_disfluency: true` to preserve filler words)
 3. `vector_store.py` — chunks transcript (1024 tokens, 128 overlap) and stores in ChromaDB with `session_id`/timestamp metadata
 4. `llm_chain.py` — computes local metrics (WPM, filler words, vocab richness) then runs 3 parallel Groq calls: summary, tech terms, improvement tips
-5. Results stored as `analysis_json` (JSONB) in PostgreSQL `sessions` table
-6. Frontend polls `GET /api/session/{id}` until `status: complete`
+5. Results stored as `analysis_json` (JSONB) in PostgreSQL, session marked `complete` — frontend unblocks here
+6. `vector_store.py` — chunks transcript and embeds into ChromaDB **after** session is complete (non-blocking; RAG Q&A available once done)
+7. Frontend polls `GET /api/session/{id}` until `status: complete`
 
 ### Key Backend Files
 ```
@@ -84,7 +85,7 @@ No user authentication in MVP — sessions are anonymous UUIDs.
 
 ## Key Technical Decisions
 
-- **Sarvam.ai** for STT (free tier, Indian English/languages); fallback to Whisper if needed
+- **Sarvam.ai** for STT (free tier, Indian English/languages), model `saarika:v2.5`; fallback to Whisper if needed
 - **Groq** for LLM inference (free tier) — model configurable via `GROQ_MODEL` env var; default `llama-3.1-70b-versatile`
 - **ChromaDB locally, Pinecone in production** for vector storage
 - **Embedding model:** ChromaDB default (`all-MiniLM-L6-v2`, managed by chroma)

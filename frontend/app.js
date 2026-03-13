@@ -1,7 +1,7 @@
 'use strict';
 
 // ─── CONFIG ──────────────────────────────────────────────────────────────────
-const API_BASE = 'http://localhost:8000';
+const API_BASE = 'http://localhost:8523';
 const POLL_INTERVAL_MS = 3000;
 
 // ─── STATE ────────────────────────────────────────────────────────────────────
