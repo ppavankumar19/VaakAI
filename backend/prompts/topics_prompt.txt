@@ -6,8 +6,8 @@ Identify 3 to 6 main topics or sections in the order they appear. For each topic
 
 Return ONLY a valid JSON array with no explanation or markdown:
 [
-  {"topic": "<short topic name, 2-5 words>", "start": "<timestamp like '0:00'>"},
-  {"topic": "<short topic name>", "start": "<timestamp>"}
+  {{"topic": "<short topic name, 2-5 words>", "start": "<timestamp like '0:00'>"}},
+  {{"topic": "<short topic name>", "start": "<timestamp>"}}
 ]
 
 Timestamped transcript:

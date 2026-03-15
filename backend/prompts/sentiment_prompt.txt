@@ -3,13 +3,13 @@ You are an expert communication coach analyzing the confidence and tone of a spe
 Analyze the following spoken transcript and evaluate the speaker's overall confidence and tone.
 
 Return ONLY a valid JSON object with no explanation or markdown:
-{
+{{
   "overall": "<one of: confident, enthusiastic, neutral, hesitant, nervous>",
   "score": <integer 0-100 where 100 is highly confident>,
   "timeline": [
-    {"segment": "<short label like '0:00-1:00'>", "tone": "<one of: confident, enthusiastic, neutral, hesitant, nervous>"}
+    {{"segment": "<short label like '0:00-1:00'>", "tone": "<one of: confident, enthusiastic, neutral, hesitant, nervous>"}}
   ]
-}
+}}
 
 Build the timeline in roughly 60-second segments. Use the natural flow of the speech to determine segment boundaries. Include 2-5 segments total.
 

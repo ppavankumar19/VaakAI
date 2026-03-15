@@ -22,7 +22,7 @@ Upload a video → audio is extracted via FFmpeg → transcribed by Sarvam.ai �
 
 ### Speech Transcription (Sarvam.ai)
 - Full verbatim timestamped transcript
-- Supports Indian English, Hindi, Telugu, Tamil, Kannada, Marathi
+- Language auto-detected by default; manually select Indian English, Hindi, Telugu, Tamil, Kannada, or Marathi
 - Click any transcript line → video seeks to that moment
 - Filler words highlighted in red, technical terms in blue
 - Search bar to find any word in the transcript
@@ -68,7 +68,7 @@ Upload a video → audio is extracted via FFmpeg → transcribed by Sarvam.ai �
 |-------|-----------|
 | Frontend | HTML5 + CSS3 + Vanilla JS, Chart.js |
 | Backend | Python 3.10+, FastAPI, SQLAlchemy |
-| STT | Sarvam.ai `saarika:v2` (free tier) |
+| STT | Sarvam.ai `saarika:v2.5` (free tier) |
 | LLM | Groq API — `llama-3.1-70b-versatile` (free tier) |
 | Vector DB | ChromaDB (local persistent) |
 | Audio | FFmpeg |
@@ -212,6 +212,7 @@ No build step. The frontend is automatically served at `http://localhost:8523/` 
 - [x] v1.0.1 — YouTube URL input (paste URL → auto-download + analyze)
 - [x] v1.1 — Grammar score + Sentiment/confidence analysis + Topic segmentation timeline
 - [x] v1.2 — RAG Q&A panel (ask questions about the video, source timestamp seek)
+- [x] v1.2.1 — Bug fixes: sentiment/topics prompt escaping, auto-detect language default
 - [ ] v1.3 — Multi-speaker diarization
 - [ ] v1.4 — Comparison mode (two sessions side-by-side)
 - [ ] v2.0 — Real-time recording mode (no file upload needed)

@@ -17,8 +17,8 @@
   --surface:      #101827;
   --surface-2:    #172034;
   --surface-3:    #1d2a42;
-  --border:       #1c2b42;
-  --border-hi:    #25384f;
+  --border:       #213348;
+  --border-hi:    #304d6a;
 
   --primary:      #3d7eff;
   --primary-glow: rgba(61,126,255,0.22);
@@ -32,9 +32,9 @@
   --filler-color: #ff6b6b;
   --tech-color:   #5aabff;
 
-  --text:         #dde8f8;
-  --muted:        #526480;
-  --muted-2:      #374d66;
+  --text:         #eef4ff;
+  --muted:        #8aaed4;
+  --muted-2:      #617fa0;
 
   --radius:       12px;
   --radius-sm:    8px;
@@ -309,7 +309,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .transcript-header h3 {
-  font-family: var(--font-display); font-size: 0.78rem; font-weight: 700;
+  font-family: var(--font-display); font-size: 0.8rem; font-weight: 700;
   text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); flex: 1;
 }
 .transcript-actions { display: flex; gap: 6px; align-items: center; }
@@ -341,7 +341,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
 .segment.hidden-search { display: none; }
 .ts {
   font-family: var(--font-mono); font-size: 0.7rem; color: var(--primary);
-  white-space: nowrap; padding-top: 3px; min-width: 36px; opacity: 0.65;
+  white-space: nowrap; padding-top: 3px; min-width: 36px; opacity: 0.82;
   flex-shrink: 0; font-variant-numeric: tabular-nums;
 }
 .filler { color: var(--filler-color); text-decoration: underline dotted; font-weight: 600; }
@@ -350,9 +350,9 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
 /* ─── SECTIONS ───────────────────────────────────────────────────────────── */
 .section { margin-bottom: 44px; }
 .section-title {
-  font-family: var(--font-display); font-size: 0.7rem; font-weight: 700;
+  font-family: var(--font-display); font-size: 0.74rem; font-weight: 700;
   color: var(--muted); text-transform: uppercase; letter-spacing: 2.5px;
-  padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 18px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border-hi); margin-bottom: 18px;
 }
 
 /* ─── METRIC CARDS ───────────────────────────────────────────────────────── */
@@ -373,7 +373,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
   font-family: var(--font-mono); font-size: 2.1rem; font-weight: 500;
   color: var(--primary); line-height: 1; margin-bottom: 7px; letter-spacing: -0.5px;
 }
-.metric-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
+.metric-label { font-size: 0.73rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; font-weight: 600; }
 .metric-sub { font-size: 0.74rem; color: var(--success); margin-top: 4px; font-weight: 500; }
 
 /* ─── CHARTS ────────────────────────────────────────────────────────────── */
@@ -384,7 +384,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
 }
 .chart-card:hover { border-color: var(--border-hi); }
 .chart-card h3 {
-  font-family: var(--font-display); font-size: 0.7rem; font-weight: 700;
+  font-family: var(--font-display); font-size: 0.74rem; font-weight: 700;
   color: var(--muted); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 16px;
 }
 .chart-canvas-wrap { position: relative; height: 220px; }
@@ -446,7 +446,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: 14px 16px;
   display: flex; flex-direction: column; gap: 6px;
-  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer; transition: border-color 0.2s, box-shadow 0.2s;
 }
 .topic-block:hover { border-color: var(--border-hi); box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
 .topic-num {
@@ -681,13 +681,13 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
         <div class="upload-options">
           <label for="language-select">Language</label>
           <select id="language-select">
+            <option value="auto" selected>Auto-detect</option>
             <option value="en-IN">Indian English</option>
             <option value="hi-IN">Hindi</option>
             <option value="te-IN">Telugu</option>
             <option value="ta-IN">Tamil</option>
             <option value="kn-IN">Kannada</option>
             <option value="mr-IN">Marathi</option>
-            <option value="auto">Auto-detect</option>
           </select>
         </div>
         <button id="upload-btn" disabled>

@@ -11,8 +11,8 @@ Scoring guide:
 
 Important: This is spoken language — minor informalities, incomplete sentences, and filler words are normal and should not be penalized heavily. Focus on subject-verb agreement, tense consistency, and overall coherence.
 
-Return ONLY a valid JSON object with no explanation:
-{"score": <integer 0-100>}
+Return ONLY this exact JSON object with no explanation, no markdown, no extra keys:
+{{"score": <integer 0-100>}}
 
 Transcript:
 {transcript}

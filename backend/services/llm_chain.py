@@ -202,7 +202,7 @@ def run_analysis(transcript_text: str, segments: list) -> dict:
 
     tech_terms = _parse_json_array(tech_raw)
     grammar_obj = _parse_json_object(grammar_raw)
-    grammar_score = int(grammar_obj.get("score", 0)) if grammar_obj else None
+    grammar_score = int(grammar_obj.get("score") or grammar_obj.get("overall") or 0) if grammar_obj else None
     sentiment = _parse_json_object(sentiment_raw) or None
     topics = _parse_json_array(topics_raw)
 
