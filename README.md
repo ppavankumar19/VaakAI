@@ -25,26 +25,40 @@ Upload a video → audio is extracted via FFmpeg → transcribed by Sarvam.ai �
 - Supports Indian English, Hindi, Telugu, Tamil, Kannada, Marathi
 - Click any transcript line → video seeks to that moment
 - Filler words highlighted in red, technical terms in blue
+- Search bar to find any word in the transcript
 
 ### AI Analysis (Groq — Llama 3.1 70B)
 
 | Analysis | What It Shows |
 |---|---|
 | Executive Summary | 4–6 sentence summary of spoken content |
-| Technical Vocabulary | Domain/tech terms detected |
+| Technical Vocabulary | Domain/tech terms detected and tagged |
 | Filler Word Detection | Count and % of "um", "uh", "basically", etc. |
 | Vocabulary Richness Score | Unique word ratio vs total words |
 | Pace Analysis | Words per minute — too fast, too slow, or ideal |
-| Improvement Tips | Personalized, numbered action items |
+| Grammar Score | 0–100 grade on grammatical quality of speech |
+| Confidence & Tone | Overall confidence score + tone label (confident, hesitant, nervous, etc.) |
+| Topic Segmentation | Auto-detected topic sections with timestamps — click to jump |
+| Improvement Tips | Personalized, numbered action items based on all metrics |
 
 ### Visual Dashboard (Chart.js)
-- Communication radar chart (6 axes)
-- Filler word frequency bar chart
-- Speech pace timeline (WPM per minute)
+- **Communication Radar** — 6-axis chart: Vocabulary, Pace, Grammar, Confidence, Tech Depth, Clarity (all axes now use real computed data)
+- **Filler Word Bar Chart** — frequency breakdown by word
+- **Speech Pace Timeline** — WPM per 60-second segment
+
+### Topic Segments Panel
+- AI detects 3–6 main topics in the speech
+- Displayed as a clickable visual timeline — click any block to jump to that moment in the video
+
+### RAG Q&A — Ask About This Video
+- Chat-style panel at the bottom of the results page
+- Ask any question about the video content (e.g. "What project was discussed?", "Did I explain clearly?")
+- Answer returned with **source timestamp chips** — click to seek the video to the exact moment
+- 5 suggested quick-question chips pre-loaded
 
 ### Export
 - Download transcript as `.txt`
-- Print/save as PDF via browser print
+- Print/save full report as PDF via browser print
 
 ---
 
@@ -79,15 +93,25 @@ VaakAI/
 │   ├── services/
 │   │   ├── audio_extractor.py     # FFmpeg wrapper
 │   │   ├── sarvam_client.py       # Sarvam.ai STT client
-│   │   ├── llm_chain.py           # Groq LLM analysis + local metrics
+│   │   ├── llm_chain.py           # Groq LLM analysis + local metrics (6 parallel calls)
 │   │   ├── url_downloader.py      # YouTube URL validator + yt-dlp downloader
 │   │   └── vector_store.py        # ChromaDB embed + search
-│   ├── prompts/                   # Prompt templates (.txt)
+│   ├── prompts/
+│   │   ├── summary_prompt.txt
+│   │   ├── tech_terms_prompt.txt
+│   │   ├── filler_words_prompt.txt
+│   │   ├── grammar_prompt.txt
+│   │   ├── sentiment_prompt.txt
+│   │   ├── topics_prompt.txt
+│   │   └── improvement_tips_prompt.txt
 │   └── requirements.txt
 ├── frontend/
-│   ├── index.html
-│   ├── style.css
-│   └── app.js
+│   ├── index.html                 # All UI: upload, processing, results screens
+│   ├── style.css                  # (unused — styles are inlined in index.html)
+│   └── app.js                     # All frontend logic
+├── CLAUDE.md
+├── SCOPE.md
+├── SPEC.md
 └── .env.example
 ```
 
@@ -158,15 +182,17 @@ No build step. The frontend is automatically served at `http://localhost:8523/` 
         ↓
 [Sarvam.ai saarika:v2 → timestamped transcript]
         ↓
-[Local metrics computed: WPM, filler words, vocab richness]
+[Local metrics: WPM, filler words, vocab richness]
         ↓
-[3 parallel Groq calls: summary + tech terms + tips]
+[5 parallel Groq calls: summary + tech terms + grammar + sentiment + topics]
+        ↓
+[Sequential Groq call: improvement tips (uses grammar score from above)]
         ↓
 [Transcript chunks embedded → ChromaDB (for RAG Q&A)]
         ↓
 [Results saved to PostgreSQL sessions table]
         ↓
-[Frontend polls GET /api/session/{id} → renders dashboard]
+[Frontend polls GET /api/session/{id} → renders full dashboard]
 ```
 
 ---
@@ -184,11 +210,11 @@ No build step. The frontend is automatically served at `http://localhost:8523/` 
 
 - [x] v1.0 — Upload + Transcription + AI Analysis + Dashboard
 - [x] v1.0.1 — YouTube URL input (paste URL → auto-download + analyze)
-- [ ] v1.1 — Grammar score + Sentiment analysis + Topic segmentation
-- [ ] v1.2 — RAG Q&A panel (ask questions about the video)
-- [ ] v1.3 — Multi-speaker detection
+- [x] v1.1 — Grammar score + Sentiment/confidence analysis + Topic segmentation timeline
+- [x] v1.2 — RAG Q&A panel (ask questions about the video, source timestamp seek)
+- [ ] v1.3 — Multi-speaker diarization
 - [ ] v1.4 — Comparison mode (two sessions side-by-side)
-- [ ] v2.0 — Real-time recording mode
+- [ ] v2.0 — Real-time recording mode (no file upload needed)
 - [ ] v2.1 — Student profile + session history
 - [ ] v2.2 — Coach/Trainer dashboard for batch review
 
