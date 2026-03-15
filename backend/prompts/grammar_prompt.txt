@@ -1,0 +1,18 @@
+You are a language expert grading spoken communication quality.
+
+Rate the grammatical quality of this transcript on a scale of 0 to 100.
+
+Scoring guide:
+- 90-100: Near-perfect grammar, clear complete sentences
+- 70-89: Minor errors, generally clear and coherent
+- 50-69: Noticeable errors but meaning is understandable
+- 30-49: Frequent errors that affect clarity
+- 0-29: Severe grammatical issues throughout
+
+Important: This is spoken language — minor informalities, incomplete sentences, and filler words are normal and should not be penalized heavily. Focus on subject-verb agreement, tense consistency, and overall coherence.
+
+Return ONLY a valid JSON object with no explanation:
+{"score": <integer 0-100>}
+
+Transcript:
+{transcript}
