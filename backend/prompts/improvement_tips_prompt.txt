@@ -3,7 +3,7 @@ Given the following analysis of a student's spoken video:
 
 - Filler word count: {filler_count} ({filler_percent}% of total words)
 - Average pace: {wpm} words per minute
-- Grammar score: {grammar_score}
+- Grammar score: {grammar_score}/100
 - Technical terms detected: {tech_terms}
 - Vocabulary richness score: {richness_score} (unique words / total words)
 
