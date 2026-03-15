@@ -426,7 +426,7 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
 /* ─── PRINT ──────────────────────────────────────────────────────────────── */
 @media print {
   header, .video-panel, .speed-row, .transcript-actions, .charts-grid,
-  .results-header, .bg-grid, .bg-orbs,
+  .results-header, .bg-grid, .bg-orbs, #section-rag,
   #screen-upload, #screen-processing { display: none !important; }
   #screen-results { display: block !important; max-width: 100%; padding: 0; }
   .results-top { grid-template-columns: 1fr; }
@@ -436,6 +436,134 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
   body { background: #fff; color: #000; }
   .metric-card, .analysis-card, .chart-card { border: 1px solid #ddd; }
 }
+
+/* ─── TOPICS TIMELINE ────────────────────────────────────────────────────── */
+.topics-timeline {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.topic-block {
+  flex: 1; min-width: 120px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 14px 16px;
+  display: flex; flex-direction: column; gap: 6px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.topic-block:hover { border-color: var(--border-hi); box-shadow: 0 4px 20px rgba(0,0,0,0.25); }
+.topic-num {
+  font-family: var(--font-mono); font-size: 0.68rem; font-weight: 500;
+  color: var(--primary); opacity: 0.7; letter-spacing: 0.5px;
+}
+.topic-name {
+  font-size: 0.875rem; font-weight: 600; color: var(--text); line-height: 1.3;
+}
+.topic-start {
+  font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted);
+  margin-top: 2px;
+}
+/* color the top border of each topic block */
+.topic-block:nth-child(6n+1) { border-top: 2px solid #3d7eff; }
+.topic-block:nth-child(6n+2) { border-top: 2px solid #f0a500; }
+.topic-block:nth-child(6n+3) { border-top: 2px solid #0fd4a4; }
+.topic-block:nth-child(6n+4) { border-top: 2px solid #ff6b6b; }
+.topic-block:nth-child(6n+5) { border-top: 2px solid #b87aff; }
+.topic-block:nth-child(6n+6) { border-top: 2px solid #5aabff; }
+
+/* sentiment badge on metric card */
+.metric-tone {
+  font-size: 0.74rem; font-weight: 600; margin-top: 4px;
+  text-transform: capitalize; letter-spacing: 0.3px;
+}
+.metric-tone.confident   { color: #0fd4a4; }
+.metric-tone.enthusiastic{ color: #3d7eff; }
+.metric-tone.neutral     { color: var(--muted); }
+.metric-tone.hesitant    { color: #f0a500; }
+.metric-tone.nervous     { color: #ff6b6b; }
+
+/* ─── RAG Q&A PANEL ──────────────────────────────────────────────────────── */
+.rag-panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); overflow: hidden;
+}
+
+.rag-chips {
+  display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 18px 12px;
+  border-bottom: 1px solid var(--border);
+}
+.rag-chip {
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--muted); border-radius: 99px; padding: 6px 14px;
+  font-size: 0.8rem; font-weight: 500;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.rag-chip:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-dim); }
+
+#rag-messages {
+  min-height: 0; max-height: 420px; overflow-y: auto;
+  padding: 4px 0;
+  display: flex; flex-direction: column; gap: 0;
+}
+#rag-messages:empty { display: none; }
+
+.rag-msg {
+  padding: 14px 18px; display: flex; flex-direction: column; gap: 6px;
+  animation: fade-up 0.18s ease both;
+}
+.rag-msg + .rag-msg { border-top: 1px solid var(--border); }
+
+.rag-q {
+  font-size: 0.855rem; font-weight: 600; color: var(--text);
+  display: flex; align-items: flex-start; gap: 9px;
+}
+.rag-q-icon {
+  width: 22px; height: 22px; border-radius: 50%; background: var(--primary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px;
+  font-size: 0.68rem; font-weight: 700; color: #fff; letter-spacing: 0;
+}
+.rag-a {
+  font-size: 0.875rem; line-height: 1.72; color: var(--text); opacity: 0.88;
+  padding-left: 31px;
+}
+.rag-a.loading { color: var(--muted); font-style: italic; }
+
+.rag-sources {
+  padding-left: 31px; display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px;
+}
+.rag-source-chip {
+  background: var(--surface-3); border: 1px solid var(--border);
+  color: var(--muted); border-radius: 6px; padding: 4px 10px;
+  font-size: 0.75rem; font-family: var(--font-mono);
+  transition: border-color 0.15s, color 0.15s;
+  cursor: pointer;
+}
+.rag-source-chip:hover { border-color: var(--primary); color: var(--primary); }
+.rag-source-chip svg { width: 10px; height: 10px; display: inline-block; vertical-align: middle; margin-right: 4px; }
+
+.rag-error { color: var(--error); font-size: 0.85rem; padding-left: 31px; }
+
+.rag-input-row {
+  display: flex; gap: 8px; padding: 12px 14px;
+  border-top: 1px solid var(--border); background: var(--surface);
+}
+#rag-input {
+  flex: 1; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 10px 14px; color: var(--text);
+  font-family: var(--font-sans); font-size: 0.875rem; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+#rag-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-dim); }
+#rag-input::placeholder { color: var(--muted-2); }
+#rag-input:disabled { opacity: 0.5; }
+#rag-send-btn {
+  background: var(--primary); color: #fff; border: none;
+  border-radius: var(--radius-sm); padding: 10px 20px;
+  font-size: 0.875rem; font-weight: 600; white-space: nowrap; flex-shrink: 0;
+  display: flex; align-items: center; gap: 7px;
+  transition: background 0.15s, box-shadow 0.15s, opacity 0.15s;
+  box-shadow: 0 4px 14px rgba(61,126,255,0.3);
+}
+#rag-send-btn svg { width: 13px; height: 13px; }
+#rag-send-btn:hover:not(:disabled) { background: #5592ff; box-shadow: 0 6px 20px rgba(61,126,255,0.45); }
+#rag-send-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
 
 /* ─── UTILITY ────────────────────────────────────────────────────────────── */
 .hidden { display: none !important; }
@@ -696,6 +824,11 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
     </div>
   </section>
 
+  <section class="section" id="section-topics">
+    <h2 class="section-title">Topic Segments</h2>
+    <div id="topics-timeline" class="topics-timeline"></div>
+  </section>
+
   <section class="section">
     <h2 class="section-title">Detailed Analysis</h2>
     <div class="analysis-grid">
@@ -729,6 +862,33 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
         </div>
         <h3>Improvement Tips</h3>
         <ol id="tips-list"></ol>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="section" id="section-rag">
+    <h2 class="section-title">Ask About This Video</h2>
+    <div class="rag-panel">
+
+      <div class="rag-chips" id="rag-chips">
+        <button class="rag-chip">What project was discussed?</button>
+        <button class="rag-chip">Summarize the technical approach</button>
+        <button class="rag-chip">What were the weakest parts?</button>
+        <button class="rag-chip">Did I explain the main topic clearly?</button>
+        <button class="rag-chip">What technical terms did I use?</button>
+      </div>
+
+      <div id="rag-messages"></div>
+
+      <div class="rag-input-row">
+        <input id="rag-input" type="text" placeholder="Ask a question about this video…" autocomplete="off" />
+        <button id="rag-send-btn" disabled>
+          Ask
+          <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
       </div>
 
     </div>
