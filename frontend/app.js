@@ -322,6 +322,7 @@ function renderResults(data) {
   renderMetricCards(a);
   destroyCharts();
   renderCharts(a);
+  renderTopics(a.topics);
   renderAnalysisCards(a);
 }
 
@@ -446,6 +447,7 @@ function renderMetricCards(a) {
   const pace = a.pace || {};
   const fw = a.filler_words || {};
 
+  const sentiment = a.sentiment || {};
   const cards = [
     {
       value: vr.total_words?.toLocaleString() ?? '—',
@@ -468,9 +470,14 @@ function renderMetricCards(a) {
       sub: `${fw.total_count ?? 0} occurrences`,
     },
     {
-      value: a.grammar_score != null ? `${a.grammar_score}/100` : 'N/A',
+      value: a.grammar_score != null ? `${a.grammar_score}/100` : '—',
       label: 'Grammar Score',
-      sub: 'Phase 2',
+      sub: '',
+    },
+    {
+      value: sentiment.score != null ? `${sentiment.score}/100` : '—',
+      label: 'Confidence',
+      tone: sentiment.overall || null,
     },
   ];
 
@@ -480,6 +487,7 @@ function renderMetricCards(a) {
       <div class="metric-value">${c.value}</div>
       <div class="metric-label">${c.label}</div>
       ${c.sub ? `<div class="metric-sub">${c.sub}</div>` : ''}
+      ${c.tone ? `<div class="metric-tone ${c.tone}">${c.tone}</div>` : ''}
     </div>
   `).join('');
 }
@@ -516,8 +524,8 @@ function renderRadar(a) {
   const scores = [
     Math.round((vr.richness_score || 0) * 100),
     wpmToScore(pace.avg_wpm),
-    a.grammar_score || 55,          // null → neutral placeholder
-    65,                              // confidence: P2 placeholder
+    a.grammar_score ?? 50,
+    a.sentiment?.score ?? 50,
     Math.min(100, (a.technical_terms?.length || 0) * 7),
     Math.max(0, 100 - (fw.percentage || 0) * 8),
   ];
@@ -643,6 +651,43 @@ function renderPaceChart(pace) {
   });
 }
 
+// ─── TOPICS TIMELINE ──────────────────────────────────────────────────────────
+function renderTopics(topics) {
+  const section = $('section-topics');
+  const container = $('topics-timeline');
+  container.innerHTML = '';
+
+  if (!topics || !topics.length) {
+    section.style.display = 'none';
+    return;
+  }
+
+  section.style.display = '';
+  topics.forEach((t, i) => {
+    const block = document.createElement('div');
+    block.className = 'topic-block';
+    block.innerHTML = `
+      <div class="topic-num">Topic ${i + 1}</div>
+      <div class="topic-name">${escapeHtml(t.topic)}</div>
+      ${t.start ? `<div class="topic-start">${escapeHtml(t.start)}</div>` : ''}
+    `;
+    if (t.start) {
+      block.style.cursor = 'pointer';
+      block.title = `Jump to ${t.start}`;
+      block.addEventListener('click', () => seekVideo(parseTimestamp(t.start)));
+    }
+    container.appendChild(block);
+  });
+}
+
+function parseTimestamp(ts) {
+  // Convert "M:SS" string to milliseconds
+  const parts = ts.split(':').map(Number);
+  if (parts.length === 2) return (parts[0] * 60 + parts[1]) * 1000;
+  if (parts.length === 3) return (parts[0] * 3600 + parts[1] * 60 + parts[2]) * 1000;
+  return 0;
+}
+
 // ─── ANALYSIS CARDS ───────────────────────────────────────────────────────────
 function renderAnalysisCards(a) {
   // Summary
@@ -697,6 +742,113 @@ function downloadBlob(blob, filename) {
   URL.revokeObjectURL(url);
 }
 
+// ─── RAG Q&A ──────────────────────────────────────────────────────────────────
+function setupRagPanel() {
+  const input = $('rag-input');
+  const sendBtn = $('rag-send-btn');
+
+  // Enable send button when there's text
+  input.addEventListener('input', () => {
+    sendBtn.disabled = !input.value.trim();
+  });
+
+  // Enter key submits
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !sendBtn.disabled) submitRagQuestion(input.value.trim());
+  });
+
+  sendBtn.addEventListener('click', () => {
+    const q = input.value.trim();
+    if (q) submitRagQuestion(q);
+  });
+
+  // Suggested chips
+  document.querySelectorAll('.rag-chip').forEach(chip => {
+    chip.addEventListener('click', () => submitRagQuestion(chip.textContent.trim()));
+  });
+}
+
+function submitRagQuestion(question) {
+  if (!state.sessionId) return;
+
+  const input = $('rag-input');
+  const sendBtn = $('rag-send-btn');
+
+  input.value = '';
+  sendBtn.disabled = true;
+  input.disabled = true;
+
+  // Render question + loading placeholder
+  const msgEl = renderRagQuestion(question);
+  const answerEl = msgEl.querySelector('.rag-a');
+
+  fetch(`${API_BASE}/api/analyze/ask`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: state.sessionId, question }),
+  })
+    .then(r => r.json().then(data => ({ ok: r.ok, data })))
+    .then(({ ok, data }) => {
+      answerEl.classList.remove('loading');
+      if (!ok) {
+        answerEl.classList.add('rag-error');
+        answerEl.textContent = data.detail || 'Something went wrong.';
+        return;
+      }
+      answerEl.textContent = data.answer || 'No answer returned.';
+      if (data.source_segments?.length) {
+        renderRagSources(msgEl, data.source_segments);
+      }
+    })
+    .catch(() => {
+      answerEl.classList.remove('loading');
+      answerEl.classList.add('rag-error');
+      answerEl.textContent = 'Network error — is the backend running?';
+    })
+    .finally(() => {
+      input.disabled = false;
+      input.focus();
+    });
+}
+
+function renderRagQuestion(question) {
+  const messages = $('rag-messages');
+
+  const msg = document.createElement('div');
+  msg.className = 'rag-msg';
+  msg.innerHTML = `
+    <div class="rag-q">
+      <div class="rag-q-icon">Q</div>
+      <span>${escapeHtml(question)}</span>
+    </div>
+    <div class="rag-a loading">Searching transcript…</div>
+  `;
+  messages.appendChild(msg);
+  msg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  return msg;
+}
+
+function renderRagSources(msgEl, sources) {
+  const sourcesDiv = document.createElement('div');
+  sourcesDiv.className = 'rag-sources';
+
+  sources.forEach(seg => {
+    const chip = document.createElement('button');
+    chip.className = 'rag-source-chip';
+    chip.innerHTML = `
+      <svg viewBox="0 0 12 12" fill="none" aria-hidden="true">
+        <polygon points="2,2 10,6 2,10" fill="currentColor"/>
+      </svg>
+      ${formatTime(seg.start_ms)}
+    `;
+    chip.title = seg.text;
+    chip.addEventListener('click', () => seekVideo(seg.start_ms));
+    sourcesDiv.appendChild(chip);
+  });
+
+  msgEl.appendChild(sourcesDiv);
+}
+
 // ─── NEW ANALYSIS ─────────────────────────────────────────────────────────────
 function resetState() {
   clearTimeout(state.pollTimer);
@@ -710,6 +862,12 @@ function resetState() {
   state.techSet.clear();
 
   destroyCharts();
+
+  $('rag-messages').innerHTML = '';
+  $('rag-input').value = '';
+  $('rag-send-btn').disabled = true;
+  $('topics-timeline').innerHTML = '';
+  $('section-topics').style.display = 'none';
 
   $('file-input').value = '';
   $('url-input').value = '';
@@ -740,6 +898,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupDropZone();
   setupTranscriptSearch();
   setupVideoSync(); // register once; reads state.transcript at event time
+  setupRagPanel();
 
   $('export-txt').addEventListener('click', exportTxt);
   $('export-pdf').addEventListener('click', exportPdf);
