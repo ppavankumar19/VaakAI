@@ -2,11 +2,12 @@ import os
 import uuid
 from uuid import UUID as PyUUID
 
-from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, BackgroundTasks, Depends, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from sqlalchemy.orm import Session as DBSession
 
 from database import get_db
+from limiter import limiter
 from models.schemas import Session as SessionModel
 from pipeline import process_video, process_url
 from services.url_downloader import validate_youtube_url, URLDownloadError
@@ -14,20 +15,25 @@ from services.url_downloader import validate_youtube_url, URLDownloadError
 router = APIRouter()
 
 UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
-ALLOWED_EXTENSIONS = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+VIDEO_EXTENSIONS = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
+AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"}
+ALLOWED_EXTENSIONS = VIDEO_EXTENSIONS | AUDIO_EXTENSIONS
 MAX_FILE_BYTES = 500 * 1024 * 1024  # 500 MB
 
 
 @router.post("/upload", status_code=202)
+@limiter.limit("5/hour")
 async def upload_video(
+    request: Request,
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    language: str = Form(default="en-IN"),
+    language: str = Form(default="auto"),
     db: DBSession = Depends(get_db),
 ):
     ext = os.path.splitext(file.filename or "")[1].lower()
     if ext not in ALLOWED_EXTENSIONS:
-        raise HTTPException(status_code=400, detail=f"Unsupported file type '{ext}'. Allowed: {', '.join(ALLOWED_EXTENSIONS)}")
+        sorted_exts = ", ".join(sorted(ALLOWED_EXTENSIONS))
+        raise HTTPException(status_code=400, detail=f"Unsupported file type '{ext}'. Allowed: {sorted_exts}")
 
     session_id = str(uuid.uuid4())
     os.makedirs(UPLOAD_DIR, exist_ok=True)
@@ -82,7 +88,9 @@ class URLUploadBody(BaseModel):
 
 
 @router.post("/upload-url", status_code=202)
+@limiter.limit("5/hour")
 async def upload_video_url(
+    request: Request,
     background_tasks: BackgroundTasks,
     body: URLUploadBody,
     db: DBSession = Depends(get_db),
