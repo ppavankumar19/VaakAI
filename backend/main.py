@@ -1,23 +1,18 @@
 import os
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 
 load_dotenv()
 
 from database import init_db
+from limiter import limiter
 from routes.upload import router as upload_router
 from routes.analyze import router as analyze_router
-
-# ---------------------------------------------------------------------------
-# Rate limiter (5 uploads / IP / hour — applied per-route in upload.py)
-# ---------------------------------------------------------------------------
-limiter = Limiter(key_func=get_remote_address, default_limits=["200/hour"])
 
 app = FastAPI(title="VoiceIQ API", version="1.0.0", docs_url="/docs")
 
