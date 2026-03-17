@@ -112,12 +112,20 @@ function setupDropZone() {
   });
 }
 
+const VIDEO_EXTS = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
+const AUDIO_EXTS = ['.mp3', '.wav', '.m4a', '.aac', '.ogg', '.flac'];
+
+function isAudioFile(file) {
+  const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
+  return AUDIO_EXTS.includes(ext);
+}
+
 function handleFileSelect(file) {
-  const ALLOWED = ['.mp4', '.mov', '.webm', '.avi', '.mkv'];
+  const ALLOWED = [...VIDEO_EXTS, ...AUDIO_EXTS];
   const ext = file.name.slice(file.name.lastIndexOf('.')).toLowerCase();
 
   if (!ALLOWED.includes(ext)) {
-    showUploadError(`Unsupported file type "${ext}". Please upload: ${ALLOWED.join(', ')}`);
+    showUploadError(`Unsupported file type "${ext}". Allowed: ${ALLOWED.join(', ')}`);
     return;
   }
   if (file.size > 500 * 1024 * 1024) {
@@ -130,6 +138,18 @@ function handleFileSelect(file) {
 
   $('file-name-label').textContent = file.name;
   $('file-size-label').textContent = formatBytes(file.size);
+
+  // Swap thumb icon: music note for audio, play icon for video
+  $('file-thumb-icon').innerHTML = isAudioFile(file)
+    ? `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <path d="M8 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M11 12V5l5-1v7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>`
+    : `<svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+        <rect x="2" y="1" width="16" height="18" rx="2" stroke="currentColor" stroke-width="1.5"/>
+        <path d="M8 7l5 3-5 3V7z" fill="currentColor"/>
+      </svg>`;
+
   show('file-preview');
   $('upload-btn').disabled = false;
 }
@@ -301,12 +321,15 @@ function renderResults(data) {
     (a.technical_terms || []).map(t => t.toLowerCase())
   );
 
-  // Set up video panel
+  // Set up video / audio panel
   const video = $('video-player');
   if (state.videoFile) {
     URL.revokeObjectURL(video.src);
     video.src = URL.createObjectURL(state.videoFile);
-    $('video-panel').classList.remove('hidden');
+    const panel = $('video-panel');
+    panel.classList.remove('hidden');
+    // Compact player height for audio-only files
+    panel.classList.toggle('audio-mode', isAudioFile(state.videoFile));
     $('youtube-panel').classList.add('hidden');
   } else if (state.sourceUrl) {
     $('video-panel').classList.add('hidden');
@@ -885,7 +908,9 @@ function resetState() {
 
   $('youtube-iframe').src = '';
   $('youtube-panel').classList.add('hidden');
-  $('video-panel').classList.remove('hidden');
+  const panel = $('video-panel');
+  panel.classList.remove('hidden');
+  panel.classList.remove('audio-mode');
 
   setUploadMode('file');
 }
