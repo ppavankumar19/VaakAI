@@ -47,18 +47,21 @@ def _split_audio(audio_path: str, chunk_dir: str, chunk_seconds: int) -> list[st
     return chunks
 
 
-def _transcribe_chunk(chunk_path: str, api_key: str, lang: str) -> list:
+def _transcribe_chunk(chunk_path: str, api_key: str, lang: str | None) -> list:
     """Send one chunk to Sarvam and return parsed segments."""
+    data: dict = {
+        "model": "saarika:v2.5",
+        "with_timestamps": "true",
+        "with_disfluency": "true",
+    }
+    if lang:  # omit language_code entirely when auto-detecting
+        data["language_code"] = lang
+
     with open(chunk_path, "rb") as f:
         response = httpx.post(
             SARVAM_API_URL,
             headers={"api-subscription-key": api_key},
-            data={
-                "model": "saarika:v2.5",
-                "language_code": lang,
-                "with_timestamps": "true",
-                "with_disfluency": "true",
-            },
+            data=data,
             files={"file": (Path(chunk_path).name, f, "audio/wav")},
             timeout=300.0,
         )
@@ -79,7 +82,8 @@ def transcribe_audio(audio_path: str, language_code: str = "en-IN") -> list:
     if not api_key:
         raise ValueError("SARVAM_API_KEY environment variable is not set")
 
-    lang = language_code if language_code != "auto" else "en-IN"
+    # Pass None when auto — omits language_code from the API call so Sarvam auto-detects
+    lang: str | None = language_code if language_code and language_code != "auto" else None
 
     duration = _get_duration(audio_path)
 
