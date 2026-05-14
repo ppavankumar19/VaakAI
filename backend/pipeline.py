@@ -137,6 +137,7 @@ def process_video(session_id: str, video_path: str, language: str, source_url: s
     except Exception as exc:
         logger.error("Pipeline failed for session %s: %s", session_id, exc, exc_info=True)
         try:
+            db.rollback()
             session = db.query(Session).filter(Session.id == session_id).first()
             if session:
                 session.status = "failed"
@@ -174,6 +175,7 @@ def process_url(session_id: str, url: str, language: str):
 
     except URLDownloadError as e:
         try:
+            db.rollback()
             session = db.query(Session).filter(Session.id == session_id).first()
             if session:
                 session.status = "failed"
@@ -188,6 +190,7 @@ def process_url(session_id: str, url: str, language: str):
     except Exception as exc:
         logger.error("URL download failed for %s: %s", session_id, exc, exc_info=True)
         try:
+            db.rollback()
             session = db.query(Session).filter(Session.id == session_id).first()
             if session:
                 session.status = "failed"
