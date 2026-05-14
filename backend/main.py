@@ -1,4 +1,5 @@
 import os
+from contextlib import asynccontextmanager
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -14,7 +15,19 @@ from limiter import limiter
 from routes.upload import router as upload_router
 from routes.analyze import router as analyze_router
 
-app = FastAPI(title="VoiceIQ API", version="1.0.0", docs_url="/docs")
+
+# ---------------------------------------------------------------------------
+# Lifespan (replaces deprecated @app.on_event("startup"))
+# ---------------------------------------------------------------------------
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    init_db()
+    os.makedirs(os.getenv("UPLOAD_DIR", "./uploads"), exist_ok=True)
+    os.makedirs(os.getenv("CHROMA_PERSIST_DIR", "./chroma_data"), exist_ok=True)
+    yield
+
+
+app = FastAPI(title="VoiceIQ API", version="1.0.0", docs_url="/docs", lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
@@ -30,16 +43,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-# ---------------------------------------------------------------------------
-# Startup
-# ---------------------------------------------------------------------------
-@app.on_event("startup")
-async def startup():
-    init_db()
-    os.makedirs(os.getenv("UPLOAD_DIR", "./uploads"), exist_ok=True)
-    os.makedirs(os.getenv("CHROMA_PERSIST_DIR", "./chroma_data"), exist_ok=True)
 
 
 # ---------------------------------------------------------------------------
