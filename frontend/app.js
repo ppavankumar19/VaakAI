@@ -507,10 +507,10 @@ function renderMetricCards(a) {
   const grid = $('metrics-cards');
   grid.innerHTML = cards.map(c => `
     <div class="metric-card">
-      <div class="metric-value">${c.value}</div>
-      <div class="metric-label">${c.label}</div>
-      ${c.sub ? `<div class="metric-sub">${c.sub}</div>` : ''}
-      ${c.tone ? `<div class="metric-tone ${c.tone}">${c.tone}</div>` : ''}
+      <div class="metric-value">${escapeHtml(String(c.value))}</div>
+      <div class="metric-label">${escapeHtml(c.label)}</div>
+      ${c.sub ? `<div class="metric-sub">${escapeHtml(c.sub)}</div>` : ''}
+      ${c.tone ? `<div class="metric-tone ${escapeHtml(c.tone)}">${escapeHtml(c.tone)}</div>` : ''}
     </div>
   `).join('');
 }
