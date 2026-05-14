@@ -8,10 +8,14 @@ venv/
 
 # Environment
 .env
+**/.env
 
 # Runtime data
 backend/uploads/
 backend/chroma_data/
+
+# IDE / tools
+.claude/
 
 # OS
 .DS_Store
