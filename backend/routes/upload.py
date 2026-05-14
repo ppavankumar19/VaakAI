@@ -14,7 +14,6 @@ from services.url_downloader import validate_youtube_url, URLDownloadError
 
 router = APIRouter()
 
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "./uploads")
 VIDEO_EXTENSIONS = {".mp4", ".mov", ".webm", ".avi", ".mkv"}
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac"}
 ALLOWED_EXTENSIONS = VIDEO_EXTENSIONS | AUDIO_EXTENSIONS
@@ -36,8 +35,9 @@ async def upload_video(
         raise HTTPException(status_code=400, detail=f"Unsupported file type '{ext}'. Allowed: {sorted_exts}")
 
     session_id = str(uuid.uuid4())
-    os.makedirs(UPLOAD_DIR, exist_ok=True)
-    video_path = os.path.join(UPLOAD_DIR, f"{session_id}{ext}")
+    upload_dir = os.getenv("UPLOAD_DIR", "./uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    video_path = os.path.join(upload_dir, f"{session_id}{ext}")
 
     # Stream to disk while enforcing size limit
     total_bytes = 0
