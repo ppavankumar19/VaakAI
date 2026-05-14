@@ -580,6 +580,78 @@ button { cursor: pointer; border: none; font-family: var(--font-sans); }
   from { opacity: 0; transform: translateY(5px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ─── RESPONSIVE: TABLET (≤ 1024px) ────────────────────────────────────── */
+@media (max-width: 1024px) {
+  .results-top { grid-template-columns: 1fr; }
+  .charts-grid { grid-template-columns: 1fr 1fr; }
+  .analysis-grid { grid-template-columns: 1fr 1fr; }
+  #screen-results { padding: 0 20px 60px; }
+  .transcript-panel { max-height: 380px; }
+}
+
+/* ─── RESPONSIVE: MOBILE (≤ 640px) ─────────────────────────────────────── */
+@media (max-width: 640px) {
+  html { font-size: 14px; }
+
+  .header-inner { padding: 0 16px; gap: 10px; }
+  .logo { font-size: 1.15rem; }
+  .tagline { font-size: 0.65rem; letter-spacing: 0.5px; }
+
+  .upload-wrapper { padding: 20px 8px 40px; gap: 20px; }
+  .upload-hero h1 { font-size: 1.6rem; }
+  .upload-hero p { font-size: 0.82rem; }
+  .upload-card { padding: 16px; gap: 12px; }
+  #drop-zone { padding: 28px 16px; }
+  .drop-icon svg { width: 36px; height: 36px; }
+
+  .upload-bottom { flex-direction: column; gap: 10px; }
+  .upload-options { width: 100%; }
+  #upload-btn { width: 100%; justify-content: center; }
+
+  #screen-results { padding: 0 12px 48px; }
+  .results-header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 16px 0 14px; }
+  .results-top { grid-template-columns: 1fr; gap: 14px; }
+
+  #video-player { max-height: 260px; }
+  .transcript-panel { max-height: 320px; }
+  .transcript-header { padding: 10px 12px 8px; }
+  .transcript-actions { width: 100%; }
+  #transcript-search { flex: 1; width: auto; }
+
+  .metrics-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric-card { padding: 14px 12px; }
+  .metric-value { font-size: 1.6rem; }
+
+  .charts-grid { grid-template-columns: 1fr; gap: 12px; }
+  .chart-canvas-wrap { height: 200px; }
+
+  .analysis-grid { grid-template-columns: 1fr; gap: 12px; }
+
+  .rag-chips { gap: 6px; padding: 12px 12px 10px; }
+  .rag-chip { font-size: 0.75rem; padding: 5px 10px; }
+  .rag-input-row { padding: 10px 10px; gap: 6px; }
+  #rag-input { font-size: 0.82rem; padding: 9px 12px; }
+  #rag-send-btn { padding: 9px 14px; font-size: 0.82rem; }
+
+  .processing-wrapper { padding: 40px 16px; }
+  #processing-pct { font-size: 2rem; }
+  .progress-track.wide { width: 220px; }
+
+  .section { margin-bottom: 32px; }
+  .section-title { font-size: 0.7rem; letter-spacing: 2px; }
+
+  .topics-timeline { gap: 6px; }
+  .topic-block { min-width: 100px; padding: 10px 12px; }
+}
+
+/* ─── RESPONSIVE: SMALL MOBILE (≤ 400px) ───────────────────────────────── */
+@media (max-width: 400px) {
+  .metrics-grid { grid-template-columns: 1fr; }
+  .upload-tabs { grid-template-columns: 1fr 1fr; }
+  .upload-tab { padding: 8px 8px; font-size: 0.8rem; }
+  .speed-row { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
