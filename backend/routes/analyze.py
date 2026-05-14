@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session as DBSession
 from database import get_db
 from models.schemas import Session as SessionModel
 from services.vector_store import search
-from services.llm_chain import _call_llm
+from services.llm_chain import call_llm
 
 router = APIRouter()
 
@@ -45,7 +45,7 @@ def ask_question(req: AskRequest, db: DBSession = Depends(get_db)):
         "If the excerpt doesn't contain enough information, say so clearly."
     )
 
-    answer = _call_llm(prompt, max_tokens=512)
+    answer = call_llm(prompt, max_tokens=512)
 
     return {
         "answer": answer.strip(),

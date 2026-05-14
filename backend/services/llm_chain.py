@@ -24,7 +24,7 @@ def _load_prompt(name: str) -> str:
     return path.read_text(encoding="utf-8")
 
 
-def _call_llm(prompt: str, max_tokens: int = 1024) -> str:
+def call_llm(prompt: str, max_tokens: int = 1024) -> str:
     response = _get_client().chat.completions.create(
         model=GROQ_MODEL,
         max_tokens=max_tokens,
@@ -188,11 +188,11 @@ def run_analysis(transcript_text: str, segments: list) -> dict:
 
     # Run first 5 calls in parallel; tips needs grammar_score so runs after
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as pool:
-        f_summary = pool.submit(_call_llm, summary_prompt, 512)
-        f_tech = pool.submit(_call_llm, tech_terms_prompt, 512)
-        f_grammar = pool.submit(_call_llm, grammar_prompt, 64)
-        f_sentiment = pool.submit(_call_llm, sentiment_prompt, 512)
-        f_topics = pool.submit(_call_llm, topics_prompt, 512)
+        f_summary = pool.submit(call_llm, summary_prompt, 512)
+        f_tech = pool.submit(call_llm, tech_terms_prompt, 512)
+        f_grammar = pool.submit(call_llm, grammar_prompt, 64)
+        f_sentiment = pool.submit(call_llm, sentiment_prompt, 512)
+        f_topics = pool.submit(call_llm, topics_prompt, 512)
 
         summary_text = f_summary.result()
         tech_raw = f_tech.result()
@@ -214,7 +214,7 @@ def run_analysis(transcript_text: str, segments: list) -> dict:
         tech_terms=", ".join(tech_terms[:8]) if tech_terms else "none detected",
         richness_score=vocab_richness["richness_score"],
     )
-    tips_raw = _call_llm(tips_prompt, 1024)
+    tips_raw = call_llm(tips_prompt, 1024)
     improvement_tips = _parse_numbered_list(tips_raw)
 
     return {
