@@ -6,8 +6,7 @@ from pathlib import Path
 
 from groq import Groq
 
-# llama-3.1-70b-versatile: free tier, 128k context, strong instruction following
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.1-70b-versatile")
+DEFAULT_GROQ_MODEL = "llama-3.1-70b-versatile"
 
 _client: Groq | None = None
 
@@ -26,7 +25,7 @@ def _load_prompt(name: str) -> str:
 
 def call_llm(prompt: str, max_tokens: int = 1024) -> str:
     response = _get_client().chat.completions.create(
-        model=GROQ_MODEL,
+        model=os.getenv("GROQ_MODEL", DEFAULT_GROQ_MODEL),
         max_tokens=max_tokens,
         messages=[{"role": "user", "content": prompt}],
         temperature=0.3,  # lower temp = more consistent JSON/list output
